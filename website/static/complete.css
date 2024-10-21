@@ -1,0 +1,24 @@
+.completed {
+    text-decoration: line-through;
+    opacity: 0.5; /* Reduz a opacidade */
+}
+
+.note-item {
+    height: 60px; /* Altura específica para cada item */
+    padding: 10px; /* Espaçamento interno */
+    border-radius: 5px; /* Bordas arredondadas */
+    margin-bottom: 5px; /* Espaço entre as notas */
+}
+
+/* Cor branca para notas ímpares e cinza para notas pares */
+.note-item:nth-child(odd) {
+    background-color: #ffffff; /* Branco */
+}
+
+.note-item:nth-child(even) {
+    background-color: #f0f0f0; /* Cinza claro */
+}
+
+.navbar-toggler-icon {
+    background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba%28255, 255, 255, 1%29' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
+}

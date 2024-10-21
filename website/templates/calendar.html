@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}Calendário{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center">Calendário de Eventos</h2>
+    <div class="d-flex justify-content-between mb-2">
+        <button class="btn btn-outline-primary" onclick="previousMonth()">Anterior</button>
+        <h4 id="calendar-month" class="text-center"></h4>
+        <button class="btn btn-outline-primary" onclick="nextMonth()">Próximo</button>
+    </div>
+
+    
+<!-- Formulário para escolher mês e ano -->
+<div class="d-flex justify-content-center gap-4">
+    <div class="text-center mr-5">
+        <div>
+            <label for="month-select" class="form-label">Escolha o mês:</label>
+        </div>
+        <div>
+            <select id="month-select" class="form-select custom-input" onchange="jumpToDate()">
+                <option value="">Selecione um mês</option>
+                <option value="0">Janeiro</option>
+                <option value="1">Fevereiro</option>
+                <option value="2">Março</option>
+                <option value="3">Abril</option>
+                <option value="4">Maio</option>
+                <option value="5">Junho</option>
+                <option value="6">Julho</option>
+                <option value="7">Agosto</option>
+                <option value="8">Setembro</option>
+                <option value="9">Outubro</option>
+                <option value="10">Novembro</option>
+                <option value="11">Dezembro</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="text-center ml-5 mb-5">
+        <div>
+            <label for="year-input" class="form-label">Escolha o ano:</label>
+        </div>
+        <div>
+            <input type="number" id="year-input" class="form-control" onchange="jumpToDate()" min="2000" max="3000" value="{{ currentYear }}" style="width: 80px;">
+        </div>
+    </div>
+</div>
+
+
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Dom</th>
+                    <th>Seg</th>
+                    <th>Ter</th>
+                    <th>Qua</th>
+                    <th>Qui</th>
+                    <th>Sex</th>
+                    <th>Sáb</th>
+                </tr>
+            </thead>
+            <tbody id="calendar-body"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal para Exibir Detalhes do Evento -->
+<div class="modal fade" id="eventModal" tabindex="-1" aria-labelledby="eventModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="eventModalLabel">Detalhes do Evento</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="event-details"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<style>
+    .form-select {
+        height: 38px; /* Ajuste o valor conforme necessário */
+    }
+
+    .custom-input {
+    border: 1px solid #ced4da; /* Cor cinza claro */
+    border-radius: 0.25rem; /* Mesma borda arredondada */
+    height: 38px; /* Mesma altura */
+}
+</style>
+
+
+{% endblock %}
+
+{% block javascript %}
+<script>
+// Variáveis globais para controle de mês e ano
+let currentMonth = new Date().getMonth();
+let currentYear = new Date().getFullYear();
+
+// Função para atualizar o calendário
+function updateCalendar() {
+    const calendarBody = document.getElementById('calendar-body');
+    const monthName = new Date(currentYear, currentMonth).toLocaleString('default', { month: 'long' });
+    document.getElementById('calendar-month').textContent = `${monthName} ${currentYear}`;
+    calendarBody.innerHTML = '';
+
+    // Primeiro dia do mês e último dia
+    const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+    let date = 1;
+    for (let i = 0; i < 6; i++) { // Máximo de 6 semanas
+        let row = document.createElement('tr');
+
+        for (let j = 0; j < 7; j++) {
+            let cell = document.createElement('td');
+            if (i === 0 && j < firstDay) {
+                cell.textContent = '';
+            } else if (date > daysInMonth) {
+                break;
+            } else {
+                cell.textContent = date;
+                cell.classList.add('calendar-day');
+                cell.addEventListener('click', () => showEventDetails(date));
+                date++;
+            }
+            row.appendChild(cell);
+        }
+        calendarBody.appendChild(row);
+    }
+}
+
+// Função para pular para uma data específica
+function jumpToDate() {
+    const selectedMonth = document.getElementById('month-select').value;
+    const selectedYear = document.getElementById('year-input').value;
+
+    if (selectedMonth !== "" && selectedYear) {
+        currentMonth = parseInt(selectedMonth);
+        currentYear = parseInt(selectedYear);
+        updateCalendar();
+    }
+}
+
+// Funções de navegação
+function nextMonth() {
+    currentMonth++;
+    if (currentMonth > 11) {
+        currentMonth = 0;
+        currentYear++;
+    }
+    updateCalendar();
+}
+
+function previousMonth() {
+    currentMonth--;
+    if (currentMonth < 0) {
+        currentMonth = 11;
+        currentYear--;
+    }
+    updateCalendar();
+}
+
+// Função para mostrar detalhes do evento
+function showEventDetails(day) {
+    const date = `${day}/${currentMonth + 1}/${currentYear}`;
+    // Aqui você pode obter os detalhes do evento para o dia específico
+    const eventDetails = `Eventos do dia ${date}`; // Placeholder, substitua com os detalhes reais
+    document.getElementById('event-details').textContent = eventDetails;
+    $('#eventModal').modal('show');
+}
+
+// Inicializar calendário ao carregar a página
+document.addEventListener('DOMContentLoaded', function() {
+    // Define valores iniciais para os campos de entrada
+    document.getElementById('year-input').value = currentYear;
+    updateCalendar();
+});
+</script>
+{% endblock %}

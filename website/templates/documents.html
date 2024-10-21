@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}Documents{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Documentos</h1>
+    
+<!-- Lista de categorias -->
+<div class="row mb-4">
+    {% for categoria in ['Documentos', 'Ingressos', 'Comprovantes', 'Passagens', 'Prints', 'Reservas', 'Outros'] %}
+    <div class="col-md-3 mb-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <!-- Cada pasta tem uma modal associada -->
+                <a href="#" data-toggle="modal" data-target="#modal{{ categoria }}">
+                    <i class="fas fa-folder fa-3x text-warning"></i>
+                </a>
+                <p>{{ categoria }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para cada categoria -->
+    <div class="modal fade" id="modal{{ categoria }}" tabindex="-1" role="dialog" aria-labelledby="modal{{ categoria }}Label" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modal{{ categoria }}Label">Documentos: {{ categoria }}</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <!-- Documentos filtrados pela categoria -->
+                    <div class="list-group">
+                        {% for documento in documentos %}
+                            {% if documento.categoria == categoria %}
+                                <div class="list-group-item">
+                                    <span>{{ documento.nome_arquivo }}</span>
+                                    <a href="{{ url_for('views.upload_file', filename=documento.nome_arquivo) }}" class="btn btn-secondary btn-sm float-right ml-2">Baixar</a>
+                                    <button type="button" class="btn btn-info btn-sm float-right" onclick="viewDocument('{{ url_for('views.view_document', documento_id=documento.id) }}')">Visualizar</button>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+    
+<!-- Botão para abrir o modal -->
+<div class="d-flex justify-content-center mb-3">
+    <button type="button" class="btn btn-success" data-toggle="modal" data-target="#uploadModal">
+        Adicionar Arquivo
+    </button>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="uploadModal" tabindex="-1" role="dialog" aria-labelledby="uploadModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="uploadModalLabel">Upload de Documentos</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form action="{{ url_for('views.upload_document') }}" method="POST" enctype="multipart/form-data">
+                    <div class="form-group mt-3 mb-4">
+                        <label for="categoria" class="font-weight-bold">Categoria</label>
+                        <select class="form-control" name="categoria" id="categoria" required>
+                            <option value="">Selecione uma categoria</option>
+                            {% for categoria in ['Documentos', 'Ingressos', 'Comprovantes', 'Passagens', 'Prints', 'Reservas', 'Outros'] %}
+                            <option value="{{ categoria }}">{{ categoria }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group mb-5 mt-3">
+                        <label for="arquivo" class="font-weight-bold">Selecione o arquivo</label>
+                        <input type="file" class="form-control-file" name="arquivo" id="arquivo" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block mt-3">Enviar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <hr>
+
+    <!-- Lista de documentos -->
+    <h2 class="mt-4">Todos Arquivos</h2>
+    <div class="list-group">
+        {% for documento in documentos %}
+        <div class="list-group-item d-flex justify-content-between align-items-center">
+            <span>{{ documento.nome_arquivo }} ({{ documento.categoria }})</span>
+            <div>
+                <a href="{{ url_for('views.upload_file', filename=documento.nome_arquivo) }}" class="btn btn-secondary btn-sm ml-2">
+                    Baixar
+                </a>
+                <button type="button" class="btn btn-info btn-sm ml-2" data-toggle="modal" data-target="#viewModal" onclick="viewDocument('{{ url_for('views.view_document', documento_id=documento.id) }}')">
+                    Visualizar
+                </button>
+                <form action="{{ url_for('views.delete_document', documento_id=documento.id) }}" method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-danger btn-sm ml-2">Excluir</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="viewModal" tabindex="-1" role="dialog" aria-labelledby="viewModalLabel" aria-hidden="true">
+    <div class="modal-dialog custom-modal-size" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="viewModalLabel">Visualizar Documento</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <iframe id="documentViewer" src="" width="100%" height="100%"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.custom-modal-size {
+    width: 70%;        
+    max-width: 100%;   
+    height: 100%;      
+    margin: auto;      
+}
+
+.modal-content {
+    height: 100%;      
+}
+
+.modal-body {
+    height: calc(100% - 56px); 
+    overflow-y: auto; 
+}
+
+</style>
+
+<script>
+
+    function viewDocument(url) {
+        // Verifica se a URL é válida antes de definir o src do iframe
+        if (url) {
+            document.getElementById('documentViewer').src = url;
+        } else {
+            console.error('URL do documento não está definido.');
+        }
+    }
+
+
+    function viewDocument(url) {
+        window.location.href = url;
+    }
+
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <!-- Cotação do Dólar -->
+      <div>
+        <span id="cotacao_dolar" class="badge badge-warning">Dólar hoje: R$ {{ cotacao_dolar }}</span>
+      </div>
+    </div>
+
+<!-- Seção de Objetivo de Gasto e Saldo Restante -->
+<div class="border p-3 mb-4 rounded" style="width: 60%; margin: 0 auto;">
+    <!-- Objetivo de Gasto -->
+    <div class="text-center mb-4">
+        <h2 class="responsive-font">
+            R${{ "{:,.2f}".format(user.financeiros[0].objetivo_gastos).replace(",", "X").replace(".", ",").replace("X", ".") if user.financeiros else '100,00' }}
+        </h2>
+        <a href="#" class="text-muted" data-toggle="modal" data-target="#modalObjetivo">Alterar</a>
+    </div>
+
+    <!-- Modal para alterar objetivo -->
+    <div class="modal fade" id="modalObjetivo" tabindex="-1" role="dialog" aria-labelledby="modalObjetivoLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalObjetivoLabel">Alterar Objetivo de Gastos</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form method="POST" action="{{ url_for('views.finance') }}">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="objetivo_gastos">Novo Objetivo de Gastos</label>
+                            <input type="text" class="form-control" id="objetivo_gastos" name="objetivo_gastos" value="{{ user.financeiro.objetivo_gastos if user.financeiro else '' }}" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                        <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Saldo Restante -->
+    <div class="text-center mb-4">
+        <h4 class="text-success">{{ saldo_restante }}</h4>
+    </div>
+</div>
+
+    <!-- Botão para abrir o modal de adicionar gasto -->
+    <div class="d-flex justify-content-center align-items-center">
+        <button type="button" class="btn btn-primary mt-5 mb-2" data-toggle="modal" data-target="#modalAdicionarGasto">
+            Adicionar Gasto
+        </button>
+    </div>
+
+
+    <!-- Filtro de Gastos -->
+<form action="{{ url_for('views.finance') }}" method="get" class="mb-3 d-flex">
+    <div class="form-row align-items-center">
+        <label for="filtro-gastos" class="form-label">Filtro de Gastos</label>
+        <select class="form-control" id="filtro-gastos" name="filtro_gastos" style="width: 85%;">
+            <option value="0" {% if filtro_gastos == '0' %}selected{% endif %}>Todos</option>
+            <option value="Passagens Aéreas" {% if filtro_gastos == 'Passagens Aéreas' %}selected{% endif %}>Passagens Aéreas</option>
+            <option value="Seguro de Viagem" {% if filtro_gastos == 'Seguro de Viagem' %}selected{% endif %}>Seguro de Viagem</option>
+            <option value="Passaporte" {% if filtro_gastos == 'Passaporte' %}selected{% endif %}>Passaporte</option>
+            <option value="Visto" {% if filtro_gastos == 'Visto' %}selected{% endif %}>Visto</option>
+            <option value="Hospedagem" {% if filtro_gastos == 'Hospedagem' %}selected{% endif %}>Hospedagem</option>
+            <option value="Transporte" {% if filtro_gastos == 'Transporte' %}selected{% endif %}>Transporte</option>
+            <option value="Ingressos para Parques" {% if filtro_gastos == 'Ingressos para Parques' %}selected{% endif %}>Ingressos para Parques</option>
+            <option value="Alimentação" {% if filtro_gastos == 'Alimentação' %}selected{% endif %}>Alimentação</option>
+            <option value="Compras" {% if filtro_gastos == 'Compras' %}selected{% endif %}>Compras</option>
+            <option value="Estacionamento" {% if filtro_gastos == 'Estacionamento' %}selected{% endif %}>Estacionamento</option>
+            <option value="Celular" {% if filtro_gastos == 'Celular' %}selected{% endif %}>Celular</option>
+            <option value="Taxas de Serviço e Resort" {% if filtro_gastos == 'Taxas de Serviço e Resort' %}selected{% endif %}>Taxas de Serviço e Resort</option>
+            <option value="Entretenimento Adicional" {% if filtro_gastos == 'Entretenimento Adicional' %}selected{% endif %}>Entretenimento Adicional</option>
+            <option value="Aluguel de Equipamentos" {% if filtro_gastos == 'Aluguel de Equipamentos' %}selected{% endif %}>Aluguel de Equipamentos</option>
+            <option value="Outros Gastos" {% if filtro_gastos == 'Outros Gastos' %}selected{% endif %}>Outros Gastos</option>
+        </select>
+        <button type="submit" class="btn btn-info" style="width: 15%;">Filtrar</button>
+        
+    </div>
+    
+</form>
+
+
+
+<div class="modal fade" id="modalAdicionarGasto" tabindex="-1" role="dialog" aria-labelledby="modalLabelAdicionarGasto" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLabelAdicionarGasto">Adicionar Novo Gasto</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method="POST" action="{{ url_for('views.finance') }}">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="categoria">Categoria</label>
+                        <select class="form-control" id="categoria" name="categoria">
+                            <option value="Passagens Aéreas">Passagens Aéreas</option>
+                            <option value="Seguro de Viagem">Seguro de Viagem</option>
+                            <option value="Passaporte">Passaporte</option>
+                            <option value="Visto">Visto</option>
+                            <option value="Hospedagem">Hospedagem</option>
+                            <option value="Transporte">Transporte</option>
+                            <option value="Ingressos para Parques">Ingressos para Parques</option>
+                            <option value="Alimentação">Alimentação</option>
+                            <option value="Compras">Compras</option>
+                            <option value="Estacionamento">Estacionamento</option>
+                            <option value="Celular">Celular</option>
+                            <option value="Taxas de Serviço e Resort">Taxas de Serviço e Resort</option>
+                            <option value="Entretenimento Adicional">Entretenimento Adicional</option>
+                            <option value="Aluguel de Equipamentos">Aluguel de Equipamentos</option>
+                            <option value="Outros Gastos">Outros Gastos</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="descricao">Descrição</label>
+                        <input type="text" class="form-control" id="descricao" name="descricao" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="moeda">Moeda</label>
+                        <select class="form-control" id="moeda" name="moeda">
+                            <option value="REAL">Real</option>
+                            <option value="DOLAR">Dólar</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="valor">Valor</label>
+                        <input type="number" class="form-control" id="valor" name="valor" required>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" name="adicionar_gasto">Adicionar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+  
+<!-- Lista de Gastos -->
+<ul class="list-group">
+    {% for gasto in gastos %}
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+        <div>
+            <strong>{{ gasto.categoria }}</strong><br>
+            <small>{{ gasto.descricao }}</small>
+        </div>
+        <span>
+            {% if gasto.moeda == 'REAL' %}
+                R${{ '{:,.2f}'.format(gasto.valor).replace(',', 'X').replace('.', ',').replace('X', '.') }}
+            {% else %}
+                ${{ '{:,.2f}'.format(gasto.valor) }}
+            {% endif %}
+        </span>
+        <form method="POST" action="{{ url_for('views.excluir_gasto', gasto_id=gasto.id) }}">
+            <button type="submit" class="btn btn-danger">Excluir</button>
+        </form>
+    </li>
+    {% endfor %}
+</ul>
+  
+<style>
+    .responsive-font {
+        font-size: calc(1.5rem + 1vw);
+    }
+</style>
+
+
+{% endblock %}

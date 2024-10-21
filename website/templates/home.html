@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<h1 align="center">Lista de Tarefas</h1>
+
+<ul class="list-group list-group-flush mb-5 mt-5 border-bottom border-success" id="notes">
+    {% for note in notes %}
+    <li class="list-group-item note-item d-flex justify-content-between align-items-center">
+        <div class="col-4 d-flex align-items-center">
+            <input type="checkbox" onchange="toggleCompletion(this, {{ note.id }})" {% if note.completed %}checked{% endif %}>
+            <span class="{% if note.completed %}text-muted{% endif %} ml-2">{{ note.data }}</span>
+        </div>
+        {% if note.due_date %}
+        <div class="col-4 text-center">
+            <span class="text-muted">{{ note.due_date.strftime('%d/%m/%Y %H:%M') }}</span>
+        </div>
+        {% endif %}
+        <div class="col-4 d-flex justify-content-end align-items-center">
+            {% if note.marker %}
+            <span class="badge badge-pill badge-light me-2">{{ marker_options[note.marker] }}</span>
+            {% endif %}
+            <button type="button" class="btn btn-danger btn-sm ml-4" onclick="deleteNote({{ note.id }})">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    </li>
+    {% endfor %}
+</ul>
+
+
+<form method="POST" class="mb-3">
+    <div class="form-row align-items-center">
+        <div class="col-md-8">
+            <textarea name="note" id="note" class="form-control" placeholder="Digite sua tarefa aqui..." style="height: 50px;"></textarea>
+        </div>
+        <div class="col-md-4">
+            <input type="datetime-local" name="due_date" class="form-control" placeholder="Data e hora da tarefa" style="height: 50px;">
+        </div>
+    </div>
+
+    <div class="form-row align-items-center mt-2">
+        <div class="col-md-10">
+            <select name="marker" id="markerDropdown" class="form-control" style="height: 50px;">
+                <option value="0">0 - Todas</option>
+                <option value="1">1 - Organização Financeira</option>
+                <option value="2">2 - Passaporte/Visto</option>
+                <option value="3">3 - Pesquisa Inicial</option>
+                <option value="4">4 - Definir Datas</option>
+                <option value="5">5 - Compra de Passagens</option>
+                <option value="6">6 - Escolha de Hospedagem</option>
+                <option value="7">7 - Compra dos Ingressos</option>
+                <option value="8">8 - Definir Transportes</option>
+                <option value="9">9 - Atividades nos Parques</option>
+                <option value="10">10 - Planejar Compras e Restaurantes</option>
+                <option value="11">11 - Comprar Dólares</option>
+                <option value="12">12 - Preparativos Pré-Viagem</option>
+                <option value="13">13 - Chegada em Orlando</option>
+                <option value="14">14 - Dias de Parques</option>
+                <option value="15">15 - Dias Alternativos</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="button" id="filterButton" class="btn btn-info" style="height: 50px; width: 100%;">Filtrar</button>
+        </div>
+    </div>
+    
+    <br />
+    <div align="center">
+        <button type="submit" class="btn btn-primary mt-3">Adicionar Tarefa</button>
+    </div>
+</form>
+
+<script>
+document.getElementById('filterButton').onclick = function() {
+    var selectedMarker = document.getElementById('markerDropdown').value;
+    window.location.href = '/?marker=' + selectedMarker; 
+};
+
+function completeNote(noteId) {
+    fetch(`/complete-note/${noteId}`, {
+        method: 'POST'
+    });
+}
+
+function deleteNote(noteId) {
+    fetch('/delete-note', {
+        method: 'POST',
+        body: JSON.stringify({ noteId: noteId })
+    }).then(() => {
+        location.reload();  
+    });
+}
+
+function toggleCompletion(checkbox, noteId) {
+    const isCompleted = checkbox.checked;
+
+    const noteElement = checkbox.nextElementSibling;
+    if (isCompleted) {
+        noteElement.classList.add('completed');
+    } else {
+        noteElement.classList.remove('completed');
+    }
+
+    fetch('/update-note', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ noteId: noteId, completed: isCompleted }),
+    });
+}
+</script>
+
+{% endblock %}
